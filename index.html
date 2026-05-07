@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mecánica de Fluidos - Transporte de Crudos</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Merriweather:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        /* 1. THE SETUP */
+        * { box-sizing: border-box; }
+        
+        body {
+            background-color: #020617; /* Very dark slate background */
+            display: grid;
+            gap: 20px;
+            grid-template-columns: 1fr;
+            margin: 0;
+            min-height: 100vh;
+            padding: 20px 0;
+            place-items: center;
+        }
+
+        /* Base Slide Container */
+        .slide-container {
+            align-items: center;
+            background-color: #0f172a; /* Slate 900 */
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            font-family: 'DM Sans', sans-serif;
+            height: 720px;
+            justify-content: center;
+            overflow: hidden;
+            padding: 60px;
+            position: relative;
+            width: 1280px;
+            color: #f8fafc;
+        }
+
+        /* Geometric background accents for technical feel */
+        .slide-container::before {
+            content: '';
+            position: absolute;
+            top: -200px;
+            right: -200px;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(56, 189, 248, 0.05) 0%, rgba(15, 23, 42, 0) 70%);
+            border-radius: 50%;
+            z-index: 0;
+        }
+
+        .slide-container::after {
+            content: '';
+            position: absolute;
+            bottom: -200px;
+            left: -200px;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(251, 191, 36, 0.05) 0%, rgba(15, 23, 42, 0) 70%);
+            border-radius: 50%;
+            z-index: 0;
+        }
+
+        .slide-container > * { position: relative; z-index: 1; }
+
+        /* 2. CONSISTENT TYPOGRAPHY */
+        .slide-container h1,
+        .slide-container h2,
+        .slide-container h3,
+        .slide-container .math-label {
+            font-family: 'Merriweather', serif;
+            font-weight: 700;
+            color: #f8fafc;
+            margin: 0;
+        }
+
+        .slide-container h1 { font-size: 70px; line-height: 1.1; letter-spacing: -1px; }
+        .slide-container .slide-title { font-size: 44px; margin-bottom: 40px; text-align: left; width: 100%; border-bottom: 2px solid #334155; padding-bottom: 15px;}
+        .slide-container .slide-title span { color: #fbbf24; } /* Amber 400 for emphasis */
+        .slide-container h3 { font-size: 30px; margin-bottom: 15px; color: #fbbf24; }
+        
+        .slide-container p,
+        .slide-container li,
+        .slide-container th,
+        .slide-container td {
+            font-size: 22px;
+            line-height: 1.6;
+            color: #cbd5e1; /* Slate 300 */
+        }
+
+        .slide-container .subtitle { font-size: 26px; font-weight: 400; color: #94a3b8; margin-top: 20px;}
+
+        /* Math Containers */
+        #formula-container {
+            background-color: #1e293b;
+            border-left: 5px solid #fbbf24;
+            padding: 20px 30px;
+            border-radius: 8px;
+            margin: 25px 0;
+            font-size: 32px;
+            display: flex;
+            justify-content: center;
+        }
+
+        /* 3. LAYOUT DEFINITIONS */
+        .content-area {
+            align-items: center;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            justify-content: center;
+            width: 100%;
+        }
+
+        /* Title Slide */
+        .full-bg-image { background-position: center; background-size: cover; padding: 0;}
+        .full-bg-image .content-overlay {
+            background: linear-gradient(90deg, rgba(15, 23, 42, 0.95) 0%, rgba(15, 23, 42, 0.7) 50%, rgba(15, 23, 42, 0) 100%);
+            height: 100%;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 80px;
+        }
+        .full-bg-image .content-overlay h1 { max-width: 800px; color: #fbbf24;}
+        .full-bg-image .content-overlay p { max-width: 700px; color: #e2e8f0; font-size: 24px;}
+
+        /* Section Title */
+        .section-title-layout { text-align: center; max-width: 900px; }
+        .section-title-layout h2 { font-size: 64px; color: #fbbf24; margin-bottom: 25px;}
+        .section-title-layout hr { border: none; height: 4px; background-color: #38bdf8; width: 120px; margin: 0 auto 30px auto; }
+
+        /* Two Column Layout */
+        .two-column { display: grid; grid-template-columns: 1fr 1fr; gap: 50px; width: 100%; align-items: start;}
+        .two-column.centered { align-items: center; }
+        
+        .two-column.tiled > div {
+            background-color: #1e293b;
+            border-radius: 12px;
+            border: 1px solid #334155;
+            padding: 40px;
+            height: 100%;
+        }
+
+        /* Images */
+        .image-wrapper { border-radius: 12px; overflow: hidden; width: 100%; height: 380px; border: 1px solid #334155; background-color: #fff;}
+        .image-wrapper img { width: 100%; height: 100%; object-fit: cover; }
+        .two-column .image-wrapper { height: 420px; }
+        .two-column .image-wrapper img { object-fit: contain; background-color: #fff;}
+
+        /* Bleed Image Right */
+        .slide-container.bleed-image-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 0; padding: 0; }
+        .bleed-image-layout .content-container { padding: 60px; display: flex; flex-direction: column; justify-content: center; height: 100%; }
+        .bleed-image-layout .image-container { height: 100%; width: 100%; }
+        .bleed-image-layout .image-container img { height: 720px; width: 100%; object-fit: cover; border-radius: 0; }
+        .bleed-image-layout .slide-title { border-bottom: none; margin-bottom: 20px;}
+
+        /* Highlighted Numbers */
+        .highlight-numbers-layout { align-items: center; display: flex; gap: 60px; width: 100%; }
+        .highlight-numbers-layout .number-box { background-color: #1e293b; padding: 50px; border-radius: 16px; border: 2px solid #38bdf8; text-align: center; flex: 0 0 45%; }
+        .highlight-numbers-layout .math-label { font-size: 28px; color: #e2e8f0; margin-top: 20px; }
+
+        /* Tiled Content (Icons) */
+        .tiled-content { display: flex; gap: 30px; width: 100%; align-items: stretch; }
+        .tile { background-color: #1e293b; border-radius: 12px; border: 1px solid #334155; padding: 35px 25px; flex: 1; text-align: center; display: flex; flex-direction: column; align-items: center;}
+        .tile .icon { color: #38bdf8; font-size: 50px; margin-bottom: 25px; }
+        .tile h3 { font-size: 24px; color: #f8fafc; }
+        .tile p { font-size: 18px; margin-bottom: 0;}
+
+        /* Tiled Images */
+        .image-tile { flex: 1; text-align: left; background-color: #1e293b; border-radius: 12px; overflow: hidden; border: 1px solid #334155;}
+        .image-tile .image-wrapper { height: 200px; border-radius: 0; border: none; border-bottom: 1px solid #334155;}
+        .image-tile .tile-text { padding: 25px; }
+        .image-tile h3 { font-size: 22px; margin-bottom: 10px; }
+        .image-tile p { font-size: 17px; }
+
+        /* Table */
+        .table-layout { width: 100%; background-color: #1e293b; border-radius: 12px; overflow: hidden; border: 1px solid #334155; }
+        .table-layout table { width: 100%; border-collapse: collapse; }
+        .table-layout th { background-color: #0f172a; color: #fbbf24; font-family: 'Merriweather', serif; font-size: 22px; padding: 20px; text-align: left; border-bottom: 2px solid #334155; }
+        .table-layout td { padding: 20px; border-bottom: 1px solid #334155; }
+        .table-layout tr:last-child td { border-bottom: none; }
+
+        /* Bullet Points */
+        .bullet-list { width: 100%; }
+        .bullet-list ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 25px;}
+        .bullet-list li { position: relative; padding-left: 50px; }
+        .bullet-list i { position: absolute; left: 0; top: 5px; color: #fbbf24; font-size: 24px; }
+        .bullet-list strong { color: #f8fafc; font-family: 'Merriweather', serif;}
+
+        /* Rounded Image */
+        .rounded-image-layout { align-items: center; }
+        .rounded-image-layout .image-wrapper { border-radius: 50%; width: 450px; height: 450px; flex-shrink: 0; margin: 0 auto; border: 4px solid #fbbf24;}
+
+        /* Charts */
+        .area-chart-container { width: 100%; background-color: #1e293b; padding: 30px; border-radius: 12px; border: 1px solid #334155;}
+        .area-chart-svg { width: 100%; height: auto; overflow: visible; }
+        .area-chart-svg .grid { stroke: #334155; stroke-width: 1; stroke-dasharray: 4 4; }
+        .area-chart-svg .area-fill { fill: url(#area-gradient); }
+        .area-chart-svg .line-stroke { fill: none; stroke: #fbbf24; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+        .area-chart-svg .data-point { fill: #0f172a; stroke: #fbbf24; stroke-width: 3; }
+        .area-chart-svg .axis-labels { fill: #94a3b8; font-size: 16px; font-family: 'DM Sans', sans-serif; }
+        .area-chart-svg .y-axis-labels { text-anchor: end; }
+        .area-chart-svg .x-axis-labels { text-anchor: middle; }
+        .chart-summary { font-style: italic; color: #94a3b8; text-align: center; margin-top: 20px;}
+
+        /* Q&A */
+        .qa-layout { text-align: center; }
+        .qa-layout h2 { font-size: 90px; color: #fbbf24; margin-bottom: 20px; }
+        .qa-layout p { font-size: 28px; }
+    </style>
+</head>
+<body>
+
+<!-- Slide 1: Title_Slide -->
+<div class="slide-container full-bg-image" id="slide1" style="background-image: url('http://googleusercontent.com/image_collection/image_retrieval/8147703997232263634');">
+    <div class="content-overlay">
+        <h1>Dinámica de Fluidos en el Transporte de Crudos</h1>
+        <p>Conectando la Química del Petróleo con la Ingeniería Mecánica de Oleoductos</p>
+        
+        <div class="subtitle" style="margin-top: 50px; font-size: 22px; color: #38bdf8; line-height: 1.5; border-left: 4px solid #fbbf24; padding-left: 15px;">
+            <strong>Materia: Mecánica de Fluidos</strong><br>
+            Docente: Ph.D. Juan Sandoval Herrera <br>
+            Universidad de América | 2026
+        </div>
+    </div>
+</div>
+
+<!-- Slide 2: Section_Title -->
+<div class="slide-container" id="slide2">
+    <div class="section-title-layout">
+        <hr>
+        <h2>El Reto Hidrodinámico</h2>
+        <p style="font-size: 40px; line-height: 1.5; color: #f8fafc;">¿Por qué la alta viscosidad de los crudos colombianos es el enemigo número uno en el transporte por tubería a gran escala?</p>
+    </div>
+</div>
+
+<!-- Slide 3: Tiled_Text (Colombian Crudes - NEW) -->
+<div class="slide-container" id="slide3">
+    <h2 class="slide-title">Clasificación del <span>Crudo en Colombia</span></h2>
+    <div class="content-area">
+        <p style="font-size: 24px; margin-bottom: 30px; text-align: center; max-width: 1000px;">Es el segundo producto de exportación del país. Su comercialización se basa en <strong>mezclas (blends)</strong> que se comparan con referencias internacionales (como el Brent) evaluando calidad, azufre y viscosidad.</p>
+        
+        <div class="tiled-content">
+            <div class="tile">
+                <div class="icon" style="color: #ef4444;"><i class="fa-solid fa-weight-hanging"></i></div>
+                <h3>Pesados y Extrapesados</h3>
+                <p>Constituyen la mayor parte de la producción actual y son el mayor reto para el transporte.</p>
+                <p style="margin-top: 15px; font-size: 16px; color: #94a3b8;"><strong>Ejemplos:</strong><br>Castilla Blend (20° API)<br>Mares Blend</p>
+            </div>
+            <div class="tile">
+                <div class="icon" style="color: #fbbf24;"><i class="fa-solid fa-water"></i></div>
+                <h3>Intermedios / Medianos</h3>
+                <p>Poseen características técnicas intermedias que facilitan su manejo en la infraestructura.</p>
+                <p style="margin-top: 15px; font-size: 16px; color: #94a3b8;"><strong>Ejemplos:</strong><br>Caño Limón (30.02° API)<br>Vasconia</p>
+            </div>
+            <div class="tile">
+                <div class="icon" style="color: #34d399;"><i class="fa-solid fa-feather"></i></div>
+                <h3>Livianos</h3>
+                <p>Altamente valorados por su bajo contenido de azufre (<0.5%). Concentrados en los Llanos Orientales.</p>
+                <p style="margin-top: 15px; font-size: 16px; color: #94a3b8;"><strong>Ejemplos:</strong><br>Apiay Blend</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Slide 4: Image_Right_Text_Left (Viscosity Definition) -->
+<div class="slide-container" id="slide4">
+    <h2 class="slide-title">Fundamento: <span>Ley de Viscosidad de Newton</span></h2>
+    <div class="content-area">
+        <div class="two-column centered">
+            <div>
+                <p>La viscosidad define cómo las capas del fluido se deslizan unas sobre otras resistiendo el flujo. Para el transporte de cantidad de movimiento, la relación de esfuerzo de corte viene dada por:</p>
+                <div id="formula-container">
+                    <math xmlns="http://www.w3.org/1998/Math/MathML" display="block">
+                        <mi>&#x03C4;</mi>
+                        <mo>=</mo>
+                        <mo>-</mo>
+                        <mi>&#x03BC;</mi>
+                        <mfrac>
+                            <mrow><mi>d</mi><mi>u</mi></mrow>
+                            <mrow><mi>d</mi><mi>y</mi></mrow>
+                        </mfrac>
+                    </math>
+                </div>
+                <p><em>(Notar el signo negativo, fundamental en la convención académica de transporte de momentum, indicando que el momentum fluye hacia zonas de menor velocidad).</em></p>
+                <p>Donde <strong>&mu;</strong> es la viscosidad dinámica, fuertemente dependiente de la temperatura y composición.</p>
+            </div>
+            <div>
+                <div class="image-wrapper">
+                    <img src="https://github.com/Juansanher25/claseconjunta/blob/main/Modelo%20de%20viscosidad%20absoluta.jpg?raw=true" alt="Perfil de velocidad de fluidos">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Slide 5: Two_Column_Tiled_Text (Rheology) -->
+<div class="slide-container" id="slide5">
+    <h2 class="slide-title">Comportamiento <span>Reológico</span> del Crudo</h2>
+    <div class="content-area">
+        <div class="two-column tiled">
+            <div>
+                <h3>Crudos Newtonianos</h3>
+                <p>Típico de <strong>crudos livianos (Apiay) e intermedios (Caño Limón)</strong>. Su viscosidad (&mu;) se mantiene constante independientemente del esfuerzo de corte aplicado por la bomba.</p>
+                <p>El comportamiento es predecible y el cálculo de presiones de bombeo sigue las reglas clásicas de la dinámica de fluidos.</p>
+            </div>
+            <div>
+                <h3>Crudos No-Newtonianos</h3>
+                <p>Característico de <strong>crudos pesados y extrapesados (Castilla, Mares)</strong> a bajas temperaturas. Presentan comportamiento pseudoplástico o tixotrópico.</p>
+                <p>Las macromoléculas (asfaltenos/resinas) forman estructuras que requieren un esfuerzo inicial mayor para fluir.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Slide 6: Highlighted_Numbers (Reynolds) -->
+<div class="slide-container" id="slide6">
+    <h2 class="slide-title">Determinando el Régimen: <span>Número de Reynolds</span></h2>
+    <div class="content-area">
+        <div class="highlight-numbers-layout">
+            <div class="number-box">
+                <div id="formula-container" style="background:transparent; border:none; margin:0; padding:0;">
+                    <math xmlns="http://www.w3.org/1998/Math/MathML" display="block">
+                        <mi>R</mi><mi>e</mi>
+                        <mo>=</mo>
+                        <mfrac>
+                            <mrow><mi>&#x03C1;</mi><mi>v</mi><mi>D</mi></mrow>
+                            <mi>&#x03BC;</mi>
+                        </mfrac>
+                    </math>
+                </div>
+                <div class="math-label">Fuerzas Inerciales vs. Viscosas</div>
+            </div>
+            <div>
+                <h3>El dominio del flujo laminar</h3>
+                <p>En el transporte de crudos pesados, la alta viscosidad (&mu; en el denominador) obliga al fluido a mantenerse frecuentemente en régimen <strong>Laminar (Re &lt; 2000)</strong>.</p>
+                <p>A diferencia del agua (turbulento), el crudo fluye en "capas" ordenadas. Esto cambia radicalmente cómo calculamos la fricción contra las paredes del oleoducto.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Slide 7: Bleed_Image_Right (Friction) -->
+<div class="slide-container bleed-image-layout" id="slide7">
+    <div class="content-container">
+        <h2 class="slide-title">Pérdidas por <span>Fricción</span></h2>
+        <p>A medida que el crudo viaja kilómetros, disipa energía mecánica por fricción. La ecuación de <strong>Darcy-Weisbach</strong> es nuestro estándar para evaluar esta pérdida de cabeza hidrostática (h<sub>f</sub>).</p>
+        <div id="formula-container" style="margin: 20px 0;">
+            <math xmlns="http://www.w3.org/1998/Math/MathML" display="block">
+                <msub><mi>h</mi><mi>f</mi></msub>
+                <mo>=</mo>
+                <mi>f</mi>
+                <mfrac><mi>L</mi><mi>D</mi></mfrac>
+                <mfrac><msup><mi>v</mi><mn>2</mn></msup><mrow><mn>2</mn><mi>g</mi></mrow></mfrac>
+            </math>
+        </div>
+        <p>En flujo laminar (crudo pesado), el factor de fricción (f) depende únicamente de la viscosidad: <strong>f = 64/Re</strong>. A mayor viscosidad, mayor fricción, y mayor caída de presión.</p>
+    </div>
+    <div class="image-container">
+        <img src="https://raw.githubusercontent.com/Juansanher25/claseconjunta/bf5131eea4f94f9670e1ab3c4588e19476438d02/Wax%20deposition%20in%20oil%20pipelines.jpg" class="bleed-image-side" alt="Interior de tubería de crudo">
+    </div>
+</div>
+
+<!-- Slide 8: Tiled_Text_With_Icons (Variables) -->
+<div class="slide-container" id="slide8">
+    <h2 class="slide-title">Variables Críticas en el <span>Diseño del Oleoducto</span></h2>
+    <div class="content-area">
+        <div class="tiled-content">
+            <div class="tile">
+                <div class="icon"><i class="fa-solid fa-droplet"></i></div>
+                <h3>Viscosidad (&mu;)</h3>
+                <p>La variable más fluctuante. Depende del tipo de crudo y es extremadamente sensible a los perfiles de temperatura nocturna en la topografía colombiana.</p>
+            </div>
+            <div class="tile">
+                <div class="icon"><i class="fa-solid fa-circle-notch"></i></div>
+                <h3>Diámetro (D)</h3>
+                <p>Un diámetro mayor reduce la velocidad y dramáticamente la fricción, pero aumenta masivamente los costos de capital (CAPEX) en acero y soldadura.</p>
+            </div>
+            <div class="tile">
+                <div class="icon"><i class="fa-solid fa-water"></i></div>
+                <h3>Rugosidad (&epsilon;)</h3>
+                <p>El estado de la pared interna del tubo. Aunque es crítica en flujo turbulento, pierde relevancia en el flujo laminar típico de crudos extrapesados.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Slide 9: Image_Right_Text_Left (Pump Power) -->
+<div class="slide-container" id="slide9">
+    <h2 class="slide-title">Consumo Energético: <span>Potencia de Bombeo</span></h2>
+    <div class="content-area">
+        <div class="two-column centered">
+            <div>
+                <p>La fricción se traduce en una <strong>caída de presión (&Delta;P)</strong>. El trabajo de la estación de bombeo es restaurar esa energía.</p>
+                <div id="formula-container">
+                    <math xmlns="http://www.w3.org/1998/Math/MathML" display="block">
+                        <mi>P</mi>
+                        <mo>=</mo>
+                        <mfrac>
+                            <mrow><mi>Q</mi><mo>&#x22C5;</mo><mi>&#x0394;</mi><mi>P</mi></mrow>
+                            <mi>&#x03B7;</mi>
+                        </mfrac>
+                    </math>
+                </div>
+                <p>El costo operativo (OPEX) es directo: si la viscosidad se duplica por un frente frío, la caída de presión se duplica, y el requerimiento de potencia eléctrica o diésel (P) para la bomba también.</p>
+            </div>
+            <div>
+                <div class="image-wrapper">
+                    <img src="https://github.com/Juansanher25/claseconjunta/blob/main/Gemini_Generated_Image_3lejk43lejk43lej.png?raw=true" alt="Estación de bombeo industrial">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Slide 10: Area_Chart_For_Trends (Impact Chart) -->
+<div class="slide-container" id="slide10">
+    <h2 class="slide-title">Impacto de la Viscosidad en la <span>Potencia Requerida</span></h2>
+    <div class="content-area">
+        <div class="area-chart-container">
+            <svg class="area-chart-svg" viewBox="0 0 1000 350">
+                <defs>
+                    <linearGradient id="area-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" style="stop-color:#fbbf24;" stop-opacity="0.6"></stop>
+                        <stop offset="100%" style="stop-color:#f59e0b;" stop-opacity="0.05"></stop>
+                    </linearGradient>
+                </defs>
+                
+                <!-- Grid Lines -->
+                <g class="grid">
+                    <line x1="100" y1="50" x2="950" y2="50"></line>
+                    <line x1="100" y1="125" x2="950" y2="125"></line>
+                    <line x1="100" y1="200" x2="950" y2="200"></line>
+                    <line x1="100" y1="275" x2="950" y2="275"></line>
+                    <line x1="100" y1="50" x2="100" y2="275"></line>
+                </g>
+
+                <!-- Data Path (Exponential Curve) -->
+                <path class="area-fill" d="M 100 275 L 100 260 L 300 230 L 500 170 L 700 90 L 900 30 L 900 275 Z"></path>
+                <polyline class="line-stroke" points="100,260 300,230 500,170 700,90 900,30"></polyline>
+
+                <!-- Data Points -->
+                <circle class="data-point" cx="100" cy="260" r="6"></circle>
+                <circle class="data-point" cx="300" cy="230" r="6"></circle>
+                <circle class="data-point" cx="500" cy="170" r="6"></circle>
+                <circle class="data-point" cx="700" cy="90" r="6"></circle>
+                <circle class="data-point" cx="900" cy="30" r="6"></circle>
+
+                <!-- Axis Labels -->
+                <g class="axis-labels y-axis-labels">
+                    <text x="85" y="55">100%</text>
+                    <text x="85" y="130">75%</text>
+                    <text x="85" y="205">50%</text>
+                    <text x="85" y="280">25%</text>
+                </g>
+                <g class="axis-labels x-axis-labels">
+                    <text x="100" y="310">10 cP</text>
+                    <text x="300" y="310">50 cP</text>
+                    <text x="500" y="310">200 cP</text>
+                    <text x="700" y="310">500 cP</text>
+                    <text x="900" y="310">1000 cP</text>
+                    <text x="500" y="340" style="font-weight: bold; fill:#e2e8f0;">Viscosidad Dinámica (&mu;)</text>
+                </g>
+                <text x="20" y="160" transform="rotate(-90 20,160)" text-anchor="middle" style="font-weight: bold; fill:#e2e8f0; font-family:'DM Sans', sans-serif;">Potencia Nominal Max (BHP)</text>
+            </svg>
+        </div>
+        <p class="chart-summary">Nota: En régimen laminar, el incremento de potencia escala linealmente con la viscosidad, acercándose rápidamente a los límites mecánicos estructurales de las estaciones de bombeo.</p>
+    </div>
+</div>
+
+<!-- Slide 11: Section_Title -->
+<div class="slide-container" id="slide11">
+    <div class="section-title-layout">
+        <hr>
+        <h2>Soluciones de Ingeniería</h2>
+        <p>Estrategias industriales aplicadas en el sector para alterar las propiedades hidrodinámicas y viabilizar el transporte comercial.</p>
+    </div>
+</div>
+
+<!-- Slide 12: Tiled_Images (Mitigation Strategies) -->
+<div class="slide-container" id="slide12">
+    <h2 class="slide-title">Estrategias de <span>Mitigación</span></h2>
+    <div class="content-area">
+        <div class="tiled-content">
+            <div class="image-tile">
+                <div class="image-wrapper"><img src="https://github.com/Juansanher25/claseconjunta/blob/main/Gemini_Generated_Image_6ahgp66ahgp66ahg.png?raw=true" alt="Intercambiador de calor industrial"></div>
+                <div class="tile-text">
+                    <h3>Calentamiento</h3>
+                    <p>Elevar la temperatura aprovecha la caída exponencial de la viscosidad. Requiere aislamiento térmico severo en la tubería.</p>
+                </div>
+            </div>
+            <div class="image-tile">
+                <div class="image-wrapper"><img src="https://github.com/Juansanher25/claseconjunta/blob/main/Gemini_Generated_Image_7xmuuu7xmuuu7xmu.png?raw=true" alt="Mezcla de fluidos industriales"></div>
+                <div class="tile-text">
+                    <h3>Dilución</h3>
+                    <p>Mezclar crudo extrapesado (Castilla) con diluyentes (Nafta, crudos livianos como Apiay) para crear un <em>Blend</em> manejable.</p>
+                </div>
+            </div>
+            <div class="image-tile">
+                <div class="image-wrapper"><img src="https://github.com/Juansanher25/claseconjunta/blob/main/Gemini_Generated_Image_9qrlvr9qrlvr9qrl.png?raw=true" alt="Emulsión microscópica"></div>
+                <div class="tile-text">
+                    <h3>Emulsiones (O/W)</h3>
+                    <p>Dispersar el crudo en fase continua de agua. Fluye mucho mejor, pero requiere separación costosa en destino.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Slide 13: Table (Comparison) -->
+<div class="slide-container" id="slide13">
+    <h2 class="slide-title">Comparativa de <span>Estrategias Tecnológicas</span></h2>
+    <div class="content-area">
+        <div class="table-layout">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Método de Transporte</th>
+                        <th>Costo Capital (CAPEX)</th>
+                        <th>Costo Operativo (OPEX)</th>
+                        <th>Impacto en Caída de Presión</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Crudo Convencional</strong> (Referencia)</td>
+                        <td>Base</td>
+                        <td>Alto (Mucha fricción)</td>
+                        <td>Muy Alta</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Calentamiento</strong> (Línea aislada)</td>
+                        <td>Muy Alto (Aislamiento, calderas)</td>
+                        <td>Alto (Combustible caldera)</td>
+                        <td>Reducción Significativa</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Dilución con Nafta/Livianos</strong></td>
+                        <td>Bajo a Medio (Mezcladores)</td>
+                        <td>Muy Alto (Compra de diluyente)</td>
+                        <td>Reducción Moderada a Alta</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Emulsión Acuosa</strong> (Core Annular)</td>
+                        <td>Medio (Inyección, Separadores)</td>
+                        <td>Medio (Agua, Tratamiento)</td>
+                        <td>Reducción Drástica</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Slide 14: Rounded_Image_and_Text (Colombian Context) -->
+<div class="slide-container" id="slide14">
+    <h2 class="slide-title">Contexto Real: <span>El Oleoducto de los Llanos (ODL)</span></h2>
+    <div class="content-area">
+        <div class="two-column rounded-image-layout">
+            <div>
+                <div class="image-wrapper">
+                    <img src="https://raw.githubusercontent.com/Juansanher25/claseconjunta/ce0f02ffe60fd958b798cda1aae4067155631a80/Los_Llanos_Pipeline_administrative_map-fr.svg" alt="Oleoducto ODL en Colombia">
+                </div>
+            </div>
+            <div>
+                <h3>Transportando Crudos Pesados</h3>
+                <p>El ODL es un laboratorio viviente de la mecánica de fluidos no-newtonianos. Conecta los campos de los Llanos Orientales (crudos de 12° a 14° API) con la red nacional.</p>
+                <p>Para lograr mover volúmenes masivos sin destruir las bombas, el sistema depende críticamente de la <strong>dilución masiva con nafta</strong> o crudos livianos en cabecera, transformando la reología del crudo antes de iniciar su largo viaje.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Slide 15: Styled_Bullet_Points (Conclusions) -->
+<div class="slide-container" id="slide15">
+    <h2 class="slide-title">Conclusiones <span>Clave</span></h2>
+    <div class="content-area">
+        <div class="bullet-list">
+            <ul>
+                <li>
+                    <i class="fa-solid fa-droplet"></i>
+                    <p><strong>La viscosidad no es estática:</strong> Depende de la química del crudo (asfaltenos), la temperatura y, en crudos pesados colombianos (Castilla), del esfuerzo de corte aplicado.</p>
+                </li>
+                <li>
+                    <i class="fa-solid fa-wave-square"></i>
+                    <p><strong>Régimen dominante:</strong> El transporte de crudo pesado es un problema clásico de dinámica de flujo <strong>Laminar</strong> (Re &lt; 2000), donde la fricción es dictada directamente por &mu;.</p>
+                </li>
+                <li>
+                    <i class="fa-solid fa-bolt"></i>
+                    <p><strong>Impacto económico total:</strong> Duplicar la viscosidad significa duplicar la caída de presión (&Delta;P) y duplicar la potencia (P) que la empresa petrolera debe pagar en las bombas.</p>
+                </li>
+                <li>
+                    <i class="fa-solid fa-flask"></i>
+                    <p><strong>Sinergia Química/Mecánica:</strong> Problemas mecánicos (alta fricción) se resuelven con soluciones químicas/termodinámicas (dilución, emulsiones, calentamiento).</p>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Slide 16: Bibliography -->
+<div class="slide-container" id="slide16">
+    <h2 class="slide-title">Referencias <span>Bibliográficas</span></h2>
+    <div class="content-area" style="align-items: flex-start; justify-content: flex-start; padding-top: 20px;">
+        <div class="bullet-list" style="width: 100%;">
+            <ul style="gap: 30px;">
+                <li>
+                    <i class="fa-solid fa-book"></i>
+                    <p><strong>Sandoval Herrera, J. A. (2018).</strong> <em>Mecánica de fluidos</em>. Bogotá: Fundación Universidad de América. ISBN: 978-958-8517-36-0.</p>
+                </li>
+                <li>
+                    <i class="fa-solid fa-file-lines"></i>
+                    <p><strong>Ochieng, F. O., Kinyanjui, M. N., Kiogora, P. R., & Abonyo, J. O. (2024).</strong> Predicting wax deposition in oil pipelines: a computational model incorporating heat and mass transfer effects. <em>International Journal of Applied and Computational Mathematics</em>, 10(1), 24.</p>
+                </li>
+                <li>
+                    <i class="fa-solid fa-book-journal-whills"></i>
+                    <p><strong>Bird, R. B., Stewart, W. E., & Lightfoot, E. N. (2002).</strong> <em>Transport Phenomena</em> (2nd ed.). John Wiley & Sons.</p>
+                </li>
+                <li>
+                    <i class="fa-solid fa-flask"></i>
+                    <p><strong>Speight, J. G. (2014).</strong> <em>The Chemistry and Technology of Petroleum</em> (5th ed.). CRC Press.</p>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Slide 17: Q&A -->
+<div class="slide-container" id="slide17">
+    <div class="qa-layout">
+        <h2>¿Preguntas?</h2>
+        <p>Dinámica de fluidos y reología de hidrocarburos</p>
+    </div>
+</div>
+
+</body>
+</html>
